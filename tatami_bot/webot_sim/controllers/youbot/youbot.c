@@ -522,10 +522,10 @@ static void passive_wait(double sec) {
 
 //gonna need to find a way to statically allocate these later
  typedef struct {
-   const float *distance_front;
-   const float *distance_back;
-   const float *distance_left;
-   const float *distance_right;
+   const float *dist_front;
+   const float *dist_back;
+   const float *dist_left;
+   const float *dist_right;
     
  }lidar_distances_t;
  
@@ -533,11 +533,11 @@ static void passive_wait(double sec) {
 void get_lidar_distances(WbDeviceTag front_tag,WbDeviceTag back_tag,
 WbDeviceTag left_tag, WbDeviceTag right_tag  ,lidar_distances_t * lidar_dist){
   
-  lidar_dist->distance_front = wb_lidar_get_range_image(front_tag);
+  lidar_dist->dist_front = wb_lidar_get_range_image(front_tag);
   
-  lidar_dist->distance_back = wb_lidar_get_range_image(back_tag);
-  lidar_dist->distance_left = wb_lidar_get_range_image(left_tag);
-  lidar_dist->distance_right = wb_lidar_get_range_image(right_tag);
+  lidar_dist->dist_back = wb_lidar_get_range_image(back_tag);
+  lidar_dist->dist_left = wb_lidar_get_range_image(left_tag);
+  lidar_dist->dist_right = wb_lidar_get_range_image(right_tag);
   
 }
 
@@ -613,18 +613,23 @@ int main(int argc, char **argv) {
     //first read from
     
     switch(robot_state){//actions and transitions
+      
       case robot_init:
          robot_state = read_in_movement_instructions;
          break;
 
       case read_in_movement_instructions:
+        
         move_instr_index += 1;
+        
         if (move_instr_index < move_instr_limit){
+        
           curr_move_instr.dir = move_instrs[move_instr_index].dir;
           curr_move_instr.distance = move_instrs[move_instr_index].distance;
           robot_state = get_starting_lidar_distances;
         
         }
+        
         else{
           robot_state = robot_end_state;
         }
@@ -635,24 +640,61 @@ int main(int argc, char **argv) {
         //get_starting_robot_distance
         
         get_lidar_distances(front_lidar,back_lidar,left_lidar,right_lidar, &starting_lidar_distances);
-        
+
+
+        robot_state = do_movement;
         break;
+
       case get_lidar_distances_during_movement:
         
         
         //check if it's more than the movement instruction current index
 
-        //if so
+        //only need to check the current dir lidar distance
+        switch(curr_move_instr.dir){
+            case 'u':
 
-
+              break;
+            case 'd':
+            
+              break;
+            case 'l':
+            
+              break;
+            case 'r':
+            
+              break;
+          }     
+        
+        
         break;
 
       case do_movement:
-          robot_state = robot_init;
+      
+      
+      //need to redesign how to move, maybe move continously at a set speed
+      //
+          switch(curr_move_instr.dir){
+            case 'u':
+              base_forwards();
+              break;
+            case 'd':
+             base_backwards();
+              break;
+            case 'l':
+              base_strafe_left();
+              break;
+            case 'r':
+              base_strafe_right();
+              break;
+          } 
+          
+          
+          robot_state = get_lidar_distances_during_movement;
           break;
 
       case stop_movement:
-          
+          base_reset();
           break;
       case robot_end_state:
       
