@@ -529,6 +529,7 @@ static void passive_wait(double sec) {
     
  }lidar_distances_t;
  
+ 
 
 void get_lidar_distances(WbDeviceTag front_tag,WbDeviceTag back_tag,
 WbDeviceTag left_tag, WbDeviceTag right_tag  ,lidar_distances_t * lidar_dist){
@@ -575,6 +576,17 @@ int main(int argc, char **argv) {
  
  
   lidar_distances_t starting_lidar_distances;
+  
+  typedef struct {
+  float mid_dist_front;
+  float mid_dist_back;
+  float mid_dist_left;
+  float mid_dist_right;
+  }starting_lidar_distances_middle_t;
+  
+  starting_lidar_distances_middle_t starting_lidar_distances_middle;
+  
+  
   lidar_distances_t curr_lidar_distances;
   // lidar_distance_t * starting_lidar_distance_pointer = & starting_lidar_distance;
   
@@ -640,19 +652,37 @@ int main(int argc, char **argv) {
         //get_starting_robot_distance
         
         get_lidar_distances(front_lidar,back_lidar,left_lidar,right_lidar, &starting_lidar_distances);
-
+        starting_lidar_distances_middle.mid_dist_front = starting_lidar_distances.dist_front[256];
+        starting_lidar_distances_middle.mid_dist_back = starting_lidar_distances.dist_back[256];
+        starting_lidar_distances_middle.mid_dist_left = starting_lidar_distances.dist_left[256];
+        starting_lidar_distances_middle.mid_dist_right = starting_lidar_distances.dist_right[256];
+        //need to figure out how to stop it from returning inf it should be in the range
 
         robot_state = do_movement;
         break;
 
       case get_lidar_distances_during_movement:
         
-        
+        //default to go back into do_movement after this switch case is done
+        robot_state = do_movement;
+                
         //check if it's more than the movement instruction current index
-
+        get_lidar_distances(front_lidar,back_lidar,left_lidar,right_lidar, &curr_lidar_distances);
+        
+        printf("\ncurr_lidar_distances.dist_front[256] %f\n",curr_lidar_distances.dist_front[256]);
+        // printf("\starting_lidar_distances.dist_front[256] %f\n", starting_lidar_distances.dist_front[256]);
+        printf("\nstarting_lidar_distances_middle.mid_dist_front  %f\n",starting_lidar_distances_middle.mid_dist_front);
+        
+        //need to change starting_lidar)dsitacnes to a different statically allocated part of memory 
+        //right now get_lidar_distances overwrites it
+        
         //only need to check the current dir lidar distance
         switch(curr_move_instr.dir){
             case 'u':
+              if(curr_lidar_distances.dist_front[256] - starting_lidar_distances_middle.mid_dist_front >=
+              curr_move_instr.distance){
+                robot_state = stop_movement;
+              }
 
               break;
             case 'd':
@@ -687,7 +717,7 @@ int main(int argc, char **argv) {
             case 'r':
               base_strafe_right();
               break;
-          } 
+          }
           
           
           robot_state = get_lidar_distances_during_movement;
@@ -757,7 +787,7 @@ int main(int argc, char **argv) {
       // }
     // }
     // pc = c;
-  }
+  }//end of while true loop
 
   wb_robot_cleanup();
 
