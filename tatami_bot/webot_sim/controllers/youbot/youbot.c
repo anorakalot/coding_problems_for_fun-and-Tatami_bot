@@ -557,7 +557,7 @@ int main(int argc, char **argv) {
   
   typedef struct {
     char dir;
-    int distance;
+    float distance;
   }movement_instruction_t;
 
 
@@ -669,9 +669,11 @@ int main(int argc, char **argv) {
         //check if it's more than the movement instruction current index
         get_lidar_distances(front_lidar,back_lidar,left_lidar,right_lidar, &curr_lidar_distances);
         
-        printf("\ncurr_lidar_distances.dist_front[256] %f\n",curr_lidar_distances.dist_front[256]);
-        // printf("\starting_lidar_distances.dist_front[256] %f\n", starting_lidar_distances.dist_front[256]);
-        printf("\nstarting_lidar_distances_middle.mid_dist_front  %f\n",starting_lidar_distances_middle.mid_dist_front);
+        //printf("\ncurr_lidar_distances.dist_front[256] %f\n",curr_lidar_distances.dist_front[256]);
+        //printf("\nstarting_lidar_distances_middle.mid_dist_front  %f\n",starting_lidar_distances_middle.mid_dist_front);
+        // printf("\ncurr_move_instr.distance %f\n",curr_move_instr.distance);
+        
+        // printf("- result %f",starting_lidar_distances_middle.mid_dist_front - curr_lidar_distances.dist_front[256]);
         
         //need to change starting_lidar)dsitacnes to a different statically allocated part of memory 
         //right now get_lidar_distances overwrites it
@@ -679,20 +681,30 @@ int main(int argc, char **argv) {
         //only need to check the current dir lidar distance
         switch(curr_move_instr.dir){
             case 'u':
-              if(curr_lidar_distances.dist_front[256] - starting_lidar_distances_middle.mid_dist_front >=
-              curr_move_instr.distance){
+              if(starting_lidar_distances_middle.mid_dist_front - curr_lidar_distances.dist_front[256]  >=
+                curr_move_instr.distance){
                 robot_state = stop_movement;
               }
 
               break;
             case 'd':
+              if(starting_lidar_distances_middle.mid_dist_back - curr_lidar_distances.dist_back[256]  >=
+                curr_move_instr.distance){
+                robot_state = stop_movement;
+              }
             
               break;
             case 'l':
-            
+              if(starting_lidar_distances_middle.mid_dist_left - curr_lidar_distances.dist_left[256]  >=
+                curr_move_instr.distance){
+                robot_state = stop_movement;
+              }
               break;
             case 'r':
-            
+              if(starting_lidar_distances_middle.mid_dist_right - curr_lidar_distances.dist_right[256]  >=
+                curr_move_instr.distance){
+                robot_state = stop_movement;
+              }
               break;
           }     
         
@@ -725,6 +737,7 @@ int main(int argc, char **argv) {
 
       case stop_movement:
           base_reset();
+          robot_state = read_in_movement_instructions;
           break;
       case robot_end_state:
       
