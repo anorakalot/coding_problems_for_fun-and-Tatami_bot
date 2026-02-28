@@ -234,7 +234,9 @@ bool base_goto_reached();
 #include <math.h>
 #include <stdio.h>
 
-#define SPEED 4.0
+// #define SPEED 4.0
+// #define SPEED 6.0
+#define SPEED 8.0
 #define MAX_SPEED 0.3
 #define SPEED_INCREMENT 0.05
 #define DISTANCE_TOLERANCE 0.001
@@ -313,8 +315,11 @@ void base_turn_right() {
   base_set_wheel_speeds_helper(speeds);
 }
 
+//the speeds go from right to left top thne I assume the same for the bottom
+//r(top) l(top) r(bottom) l(bottom)
 void base_strafe_left() {
-  static double speeds[4] = {SPEED, -SPEED, -SPEED, SPEED};
+  // static double speeds[4] = {SPEED+4, -SPEED,-SPEED-4, SPEED};//, -SPEED, SPEED};
+  static double speeds[4] = {SPEED, -SPEED,-SPEED, SPEED};//, -SPEED, SPEED};
   base_set_wheel_speeds_helper(speeds);
 }
 
@@ -543,6 +548,8 @@ WbDeviceTag left_tag, WbDeviceTag right_tag  ,lidar_distances_t * lidar_dist){
 }
 
 int main(int argc, char **argv) {
+
+//control pid already built into the device wheel under the hingejoint
   wb_robot_init();
   // void wb_lidar_enable(WbDeviceTag tag, int sampling_period);
   WbDeviceTag front_lidar = wb_robot_get_device("front_lidar");
@@ -562,15 +569,18 @@ int main(int argc, char **argv) {
 
 
   movement_instruction_t move_instrs[100];
-  move_instrs[0].dir = 'u';
-  move_instrs[0].distance = 2;
+  // move_instrs[0].dir = 'u';
+  // move_instrs[0].distance = 2;
+  // move_instrs[1].dir = 'd';
+  // move_instrs[1].distance = 3;
+  move_instrs[0].dir = 'l';
+  move_instrs[0].distance = 5;
   move_instrs[1].dir = 'r';
   move_instrs[1].distance = 4;
-  move_instrs[2].dir = 'd';
-  move_instrs[2].distance = 3;
-  move_instrs[3].dir = 'l';
-  move_instrs[3].distance = 5;
- 
+
+//prev center of mass was 0,0,-0.045 //xyz
+//former mass was 22
+//both of the changes didn't seem to do anything
  movement_instruction_t curr_move_instr;
 
  
@@ -639,7 +649,8 @@ int main(int argc, char **argv) {
           curr_move_instr.dir = move_instrs[move_instr_index].dir;
           curr_move_instr.distance = move_instrs[move_instr_index].distance;
           robot_state = get_starting_lidar_distances;
-        
+          printf("\ncurr_move_instr.dir = %c\n" , curr_move_instr.dir);
+          printf("\ncurr_move_instr.distance = %f\n", curr_move_instr.distance);
         }
         
         else{
@@ -718,15 +729,19 @@ int main(int argc, char **argv) {
       //
           switch(curr_move_instr.dir){
             case 'u':
+              printf("going forward");
               base_forwards();
               break;
             case 'd':
+             printf("going down");
              base_backwards();
               break;
             case 'l':
+              printf("going left");
               base_strafe_left();
               break;
             case 'r':
+              printf("going right");
               base_strafe_right();
               break;
           }
@@ -740,7 +755,8 @@ int main(int argc, char **argv) {
           robot_state = read_in_movement_instructions;
           break;
       case robot_end_state:
-      
+          robot_state = robot_end_state;
+          printf("robot is done");
           break;
       default:
           robot_state = robot_init;
