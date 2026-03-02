@@ -548,6 +548,9 @@ WbDeviceTag left_tag, WbDeviceTag right_tag  ,lidar_distances_t * lidar_dist){
 }
 
 int main(int argc, char **argv) {
+//ok so it turns to the right when doing strafe left this has gotta be uneven weight
+//maybe more right heavy
+//try adding a solid with physics to balance the weight
 
 //control pid already built into the device wheel under the hingejoint
   wb_robot_init();
