@@ -551,6 +551,9 @@ int main(int argc, char **argv) {
 //ok so it turns to the right when doing strafe left this has gotta be uneven weight
 //maybe more right heavy
 //try adding a solid with physics to balance the weight
+//ok so adding both of them mass 10 makes the robot turn right then go right slowly at a 90 degree angle
+//even though I wanted it to strafe left
+//oh wait it turns 90 degree to the left then strafes righ
 
 //control pid already built into the device wheel under the hingejoint
   wb_robot_init();
